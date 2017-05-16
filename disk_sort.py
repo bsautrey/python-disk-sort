@@ -7,18 +7,15 @@ from time import time
 # you can use other implementations without changing the code, e.g. import ujson as json.
 import json as json
 
-# these globals are used to calibrate the amount of memory usage.
-# small_item_size*small_total_lines = mex memory usage per server (process) 
-small_item_size = 60.0 # bytes
-small_total_lines = 2500000.0
-number_of_servers_per_location = 1 # number of servers (processes) running disk_sory.py simultaneously.
 
 class DiskSort():
     
-    def __init__(self,working_dir):
+    def __init__(self,working_dir,max_number_of_bytes_in_memory=100000000.0,number_of_processes=1):
         # init
         self.working_dir = working_dir
-        self.max_number_items = 500000
+        self.max_number_of_bytes_in_memory = max_number_of_bytes_in_memory
+        self.number_of_processes = number_of_processes
+        self.max_number_items = None
         
         # shared references
         self.number_items = 0
@@ -117,10 +114,7 @@ class DiskSort():
             s = sum(largest_items)
             l  = float(len(largest_items))
             mean_size = s/l
-            ratio = min(small_item_size/mean_size,1.0)
-            lines_per_server = small_total_lines/number_of_servers_per_location
-            self.max_number_items = int(ratio*lines_per_server)
-            print 'MAX NUMBER ITEMS IN MEMORY:',self.max_number_items
+            self.max_number_items = int(self.max_number_of_bytes_in_memory/(mean_size*self.number_of_processes))
 
 
 # create an iterable object, from a file, that returns deserialized items.      
